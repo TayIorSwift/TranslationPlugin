@@ -73,7 +73,6 @@ public class TranslationPlugin extends Plugin implements KeyListener
     @Override
     protected void startUp()
     {
-        Written = false;
         keyManager.registerKeyListener(this);
     }
 
