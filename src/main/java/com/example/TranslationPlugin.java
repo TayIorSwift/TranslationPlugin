@@ -16,10 +16,7 @@ import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import net.runelite.api.*;
 import net.runelite.api.events.*;
-import net.runelite.api.widgets.Widget;
-import net.runelite.api.widgets.WidgetInfo;
-import static net.runelite.api.widgets.WidgetInfo.TO_CHILD;
-import static net.runelite.api.widgets.WidgetInfo.TO_GROUP;
+import net.runelite.api.widgets.*;
 import net.runelite.client.callback.ClientThread;
 import net.runelite.client.chat.ChatColorType;
 import net.runelite.client.chat.ChatMessageBuilder;
@@ -37,8 +34,8 @@ import org.json.JSONObject;
 
 
 @PluginDescriptor(
-        name = "Translate Helper",
-        description = "Auto detect and translate text in chat",
+        name = "Message Translator",
+        description = "Translates text in chat",
         tags = {"chat"}
 )
 @Slf4j
@@ -82,8 +79,6 @@ public class TranslationPlugin extends Plugin implements KeyListener
         keyManager.unregisterKeyListener(this);
     }
 
-
-
     @Subscribe
     public void onMenuOpened(MenuOpened event)
     {
@@ -100,10 +95,10 @@ public class TranslationPlugin extends Plugin implements KeyListener
             return;
         }
 
-        final int groupId = TO_GROUP(entry.getParam1());
-        final int childId = TO_CHILD(entry.getParam1());
+        final int groupId = WidgetUtil.componentToInterface(entry.getParam1());
+        final int childId = WidgetUtil.componentToId(entry.getParam1());
 
-        if (groupId != WidgetInfo.CHATBOX.getGroupId())
+        if (groupId != InterfaceID.CHATBOX)
         {
             return;
         }
@@ -111,12 +106,12 @@ public class TranslationPlugin extends Plugin implements KeyListener
         final Widget widget = client.getWidget(groupId, childId);
         final Widget parent = widget.getParent();
 
-        if (WidgetInfo.CHATBOX_MESSAGE_LINES.getId() != parent.getId())
+        if (ComponentID.CHATBOX_MESSAGE_LINES != parent.getId())
         {
             return;
         }
 
-        final int first = WidgetInfo.CHATBOX_FIRST_MESSAGE.getChildId();
+        final int first = WidgetUtil.componentToId(ComponentID.CHATBOX_FIRST_MESSAGE);
 
         final int dynamicChildIdSender = (childId - first) * 4;
         final int dynamicChildId = (childId - first) * 4 + 1;
@@ -140,15 +135,13 @@ public class TranslationPlugin extends Plugin implements KeyListener
 
                     translateTextAsync(currentMessage)
                             .thenAccept(result -> {
-                                System.out.println(result); // Handle the translated text
+                                // Handle the translated text
                                 sendChatMessage(messageSender + " " + result.replaceAll("<[^>]*>", ""));
                             })
                             .exceptionally(a -> {
                                 a.printStackTrace(); // Handle the error
                                 return null;
                             });
-
-
                 });
     }
 
